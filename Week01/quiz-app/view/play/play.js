@@ -1,4 +1,4 @@
-// DOMS ELEMENTS  ---------------------------------------------------------
+// DOM ELEMENTS ---------------------------------------------------------
 const dom_quiz = document.querySelector("#quiz");
 const dom_question = document.querySelector("#question");
 const dom_choiceA = document.querySelector("#A");
@@ -10,8 +10,8 @@ const dom_start = document.querySelector("#start");
 
 dom_start.addEventListener("click", onStart);
 
-// DATA  ---------------------------------------------------------
-let defaultuQestions = [
+// DEFAULT QUESTIONS ----------------------------------------------------
+let defaultQuestions = [
   {
     title: "What does HTML stand for?",
     choiceA: "Hi Thierry More Laught",
@@ -37,100 +37,105 @@ let defaultuQestions = [
     correct: "C",
   },
 ];
-if (!localStorage.getItem("questions")) {
-  localStorage.setItem("questions", JSON.stringify(defaultQuestions));
+
+// ------------------------------------------------------------
+// Load questions from localStorage OR use defaults
+function loadQuestions() {
+  let savedQuestions = JSON.parse(localStorage.getItem("questions")) || [];
+
+  // Add default questions if not already present
+  defaultQuestions.forEach((q) => {
+    if (!savedQuestions.some((sq) => sq.title === q.title)) {
+      savedQuestions.push(q);
+    }
+  });
+
+  localStorage.setItem("questions", JSON.stringify(savedQuestions));
+  return savedQuestions;
 }
-let questions = JSON.parse(localStorage.getItem("questions"));
+
+// Get questions
+let questions = loadQuestions();
+
+// RUNNING VARIABLES ---------------------------------------------------
 let runningQuestionIndex = 0;
 let score = 0;
 
-// FUNCTIONS ---------------------------------------------------------
+// FUNCTIONS -----------------------------------------------------------
 
-// Hide a given element
+// Hide element
 function hide(element) {
-  // TODO
   element.style.display = "none";
 }
 
+// Show element
 function show(element) {
-  // TODO
   element.style.display = "block";
 }
 
+// Start quiz
 function onStart() {
-  // Render the current question
   renderQuestion();
-  // Display the quiz view,
   hide(dom_start);
   hide(dom_score);
   show(dom_quiz);
 }
 
+// Render current question
 function renderQuestion() {
-  // Render the current question on the quiz view
   let question = questions[runningQuestionIndex];
   dom_question.textContent = question.title;
-  dom_choiceA.textContent= question.choiceA;
-  dom_choiceB.textContent= question.choiceB;
-  dom_choiceC.textContent= question.choiceC;
-  dom_choiceD.textContent= question.choiceD;
+  dom_choiceA.textContent = question.choiceA;
+  dom_choiceB.textContent = question.choiceB;
+  dom_choiceC.textContent = question.choiceC;
+  dom_choiceD.textContent = question.choiceD;
 }
-function checkAnswer(answer){
+
+// Check answer
+function checkAnswer(answer) {
   onPlayerSubmit(answer);
 }
+
+// Handle answer submission
 function onPlayerSubmit(answer) {
-  // Update the score, display the next question or the score view
   let q = questions[runningQuestionIndex];
-  if (answer === q.correct) {
-    score++;
-  }
-  let size = questions.length;
-  if (runningQuestionIndex < size-1) {
+  if (answer === q.correct) score++;
+
+  if (runningQuestionIndex < questions.length - 1) {
     runningQuestionIndex++;
     renderQuestion();
-  }
-  else {
-     renderSCore();
+  } else {
+    renderScore();
   }
 }
 
-function renderSCore() {
-  // calculate the amount of question percent answered by the user
-  let scoreSize = questions.length;
-  let scorePerc = (score * 100) / scoreSize;
-  // choose the image based on the scorePerCent
+// Render final score
+function renderScore() {
+  let scorePerc = (score * 100) / questions.length;
+
   localStorage.setItem("lastScore", score);
   localStorage.setItem("lastScorePercent", scorePerc.toFixed(0));
-  let emoji='';
-  if (scorePerc < 20) {
-    emoji ='😭';
-  }
-  else if (scorePerc >= 20 && scorePerc <= 40) {
-    emoji = '🥲';
-  }
-  else if (scorePerc >= 40 && scorePerc <= 60) {
-    emoji = '🙂';
-  }
-  else if (scorePerc >= 60 && scorePerc <= 80) {
-    emoji = '☺️';
-  }
-  else {
-    emoji = '🥰';
-  }
+
+  let emoji = "";
+  if (scorePerc < 20) emoji = "😭";
+  else if (scorePerc <= 40) emoji = "🥲";
+  else if (scorePerc <= 60) emoji = "🙂";
+  else if (scorePerc <= 80) emoji = "☺️";
+  else emoji = "🥰";
 
   hide(dom_question);
-  let c=document.getElementById("choices");
-  hide(c);
+  hide(document.getElementById("choices"));
   show(dom_score);
+
   dom_score.innerHTML = `
     <div style="text-align: center;">
       <div style="font-size: 80px; margin: 20px 0;">${emoji}</div>
       <div>Your Score is: ${scorePerc.toFixed(0)}%</div>
     </div>
-  `
+  `;
 }
 
-// FUNCTIONS ---------------------------------------------------------
+// INITIAL UI STATE ----------------------------------------------------
 show(dom_start);
 hide(dom_quiz);
 hide(dom_score);
